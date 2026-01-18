@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard - Packigo</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .sidebar {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: 16px;
+            height: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-muted);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--primary-accent);
+        }
+
+        #map-container {
+            height: 400px;
+            width: 100%;
+            background: #1f2937;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .booking-card {
+            background: var(--surface-hover);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-item h3 {
+            font-size: 1.75rem;
+            color: var(--primary-accent);
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fa-solid fa-box-open"></i> Packigo<span>.</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <span id="userName" style="font-weight: 500; font-size: 0.95rem;">Client Dashboard</span>
+                    <button onclick="handleLogout()" class="btn btn-outline"
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem;">Logout</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <ul class="sidebar-menu">
+                    <li><a href="javascript:void(0)" id="menuOverview" class="active"><i class="fa-solid fa-gauge"></i>
+                            Overview</a></li>
+                    <li><a href="javascript:void(0)" id="menuBook"><i class="fa-solid fa-plus-circle"></i> Book New
+                            Move</a></li>
+                    <li><a href="javascript:void(0)" id="menuEstimate"><i class="fa-solid fa-calculator"></i> Price
+                            Estimator</a></li>
+                    <li><a href="javascript:void(0)" id="menuHistory"><i class="fa-solid fa-truck"></i> My History</a>
+                    </li>
+                    <li><a href="javascript:void(0)" id="menuProfile"><i class="fa-solid fa-user-gear"></i> Profile</a>
+                    </li>
+                </ul>
+            </aside>
+
+            <main class="main-content">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <p>Active Moves</p>
+                        <h3 id="statActive">0</h3>
+                    </div>
+                    <div class="stat-item">
+                        <p>Completed</p>
+                        <h3 id="statCompleted">0</h3>
+                    </div>
+                    <div class="stat-item">
+                        <p>Total Bookings</p>
+                        <h3 id="statTotal">0</h3>
+                    </div>
+                </div>
+
+                <div id="overviewTab">
+                    <div class="section-title" style="text-align: left; margin-bottom: 1.5rem;">
+                        <h3><i class="fa-solid fa-location-crosshairs"></i> Live Vehicle Tracking</h3>
+                        <p style="font-size: 0.9rem;">Real-time location of your current shipment</p>
+                    </div>
+
+                    <div id="map-container">
+                        <div id="map" style="width: 100%; height: 100%;">
+                            <p>Initializing Map...</p>
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="text-align: left; margin-bottom: 1.5rem;">
+                        <h3>Recent Move Status</h3>
+                    </div>
+
+                    <div id="recentBookings">
+                        <div class="booking-card" style="justify-content: center; color: var(--text-muted);">
+                            No active moves found.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Booking Form Tab -->
+                <div id="bookTab" style="display: none;">
+                    <div
+                        style="background: var(--surface-color); padding: 2.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                            <h2 style="margin: 0;">Request New Shifting</h2>
+                            <div
+                                style="background: rgba(249, 115, 22, 0.1); padding: 0.8rem 1.5rem; border-radius: 12px; border: 1px solid var(--primary-accent); text-align: right;">
+                                <p
+                                    style="font-size: 0.75rem; color: var(--text-muted); margin: 0; text-transform: uppercase;">
+                                    Estimated Cost</p>
+                                <h3 id="bookingEstimate" style="margin: 0; color: var(--primary-accent);">₹0</h3>
+                            </div>
+                        </div>
+                        <form id="bookingForm">
+                            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="custName" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="tel" id="custPhone" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Pickup Address</label>
+                                    <input type="text" id="pickupAddr" class="form-control"
+                                        placeholder="Complete address" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Drop-off Address</label>
+                                    <input type="text" id="dropAddr" class="form-control" placeholder="Complete address"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Distance (km)</label>
+                                    <input type="number" id="bookDistance" class="form-control"
+                                        placeholder="Approx distance" value="10" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Property Size</label>
+                                    <select id="bookSize" class="form-control">
+                                        <option value="1">1 RK / Studio</option>
+                                        <option value="2">1 BHK</option>
+                                        <option value="3">2 BHK</option>
+                                        <option value="4">3 BHK</option>
+                                        <option value="5">Villa / 4+ BHK</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Type of Move</label>
+                                    <select id="moveType" class="form-control">
+                                        <option value="Home Shifting">Home Shifting</option>
+                                        <option value="Office Move">Office Move</option>
+                                        <option value="Vehicle Transport">Vehicle Transport</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Vehicle Preference</label>
+                                    <select id="bookVehicle" class="form-control">
+                                        <option value="small">Pickup (Small)</option>
+                                        <option value="medium">Truck (Medium)</option>
+                                        <option value="large">Container (Large)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 2rem; width: 100%;">
+                                Confirm & Book Move
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Price Estimator Tab -->
+                <div id="estimateTab" style="display: none;">
+                    <div
+                        style="background: var(--surface-color); padding: 2.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h2 style="margin-bottom: 2rem;">Cost Calculator</h2>
+                        <div class="grid" style="grid-template-columns: 1fr 1.5fr; gap: 2rem;">
+                            <div>
+                                <div class="form-group">
+                                    <label>Select House Size</label>
+                                    <select id="estSize" class="form-control">
+                                        <option value="1">1 RK / Studio</option>
+                                        <option value="2">1 BHK</option>
+                                        <option value="3">2 BHK</option>
+                                        <option value="4">3 BHK</option>
+                                        <option value="5">Villa / 4+ BHK</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Distance (km)</label>
+                                    <input type="number" id="estDistance" class="form-control" value="20">
+                                </div>
+                                <div class="form-group">
+                                    <label>Floor Level</label>
+                                    <input type="number" id="estFloor" class="form-control" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Lift Available?</label>
+                                    <select id="estLift" class="form-control">
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div
+                                style="background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                                <h3 style="color: var(--primary-accent); margin-bottom: 1.5rem;">Estimate Summary</h3>
+                                <div id="estSummary" style="font-size: 0.95rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
+                                        <span style="color: var(--text-muted);">Base Packing</span>
+                                        <span id="estPacking">₹0</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
+                                        <span style="color: var(--text-muted);">Transportation</span>
+                                        <span id="estTransport">₹0</span>
+                                    </div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <span style="color: var(--text-muted);">Labor & Handling</span>
+                                        <span id="estLabor">₹0</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <h3 style="margin: 0; color: #fff;">Total Estimate</h3>
+                                        <h2 style="margin: 0; color: var(--primary-accent);" id="estTotal">₹0</h2>
+                                    </div>
+                                </div>
+                                <button onclick="proceedToBooking()" class="btn btn-primary"
+                                    style="width: 100%; margin-top: 2rem;">Book with this Estimate</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My History Tab -->
+                <div id="historyTab" style="display: none;">
+                    <div
+                        style="background: var(--surface-color); padding: 2.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h2 style="margin-bottom: 2rem;">My Booking History</h2>
+                        <div id="historyList">
+                            <p style="text-align: center; color: var(--text-muted); padding: 3rem;">No bookings found
+                                yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tab -->
+                <div id="profileTab" style="display: none;">
+                    <div
+                        style="background: var(--surface-color); padding: 2.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                        <h2 style="margin-bottom: 2rem;">Profile Settings</h2>
+                        <div style="max-width: 500px;">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="profileName" class="form-control" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="profileEmail" class="form-control" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Account Verified</label>
+                                <div
+                                    style="display: flex; align-items: center; gap: 0.5rem; color: #22c55e; margin-top: 0.5rem;">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>Google Cloud Identity Active</span>
+                                </div>
+                            </div>
+                            <button onclick="handleLogout()" class="btn btn-outline"
+                                style="margin-top: 2rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">Sign Out
+                                from Device</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <!-- Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Use the same config as signup
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQBef6qDUFudB2A6aicZpOtQGyl722408",
+            authDomain: "packigo-app.firebaseapp.com",
+            projectId: "packigo-app",
+            databaseURL: "https://packigo-app-default-rtdb.firebaseio.com"
+        };
+
+        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let currentUserId = null;
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUserId = user.uid;
+                loadUserData();
+                loadMyBookings();
+                checkMaintenance();
+            } else {
+                window.location.href = 'client-login.html';
+            }
+        });
+
+        async function checkMaintenance() {
+            try {
+                const res = await fetch('/api/settings');
+                const settings = await res.json();
+                if (settings.maintenance) {
+                    const bookingForm = document.getElementById('bookTab');
+                    bookingForm.innerHTML = `
+                         <div style="text-align: center; padding: 4rem 2rem; background: rgba(239,68,68,0.05); border-radius: 24px; border: 1px dashed rgba(239,68,68,0.2);">
+                            <i class="fa-solid fa-screwdriver-wrench" style="font-size: 3rem; color: #ef4444; margin-bottom: 1.5rem;"></i>
+                            <h2 style="color: #fff; margin-bottom: 1rem;">Service Temporarily Unavailable</h2>
+                            <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto;">We are currently performing scheduled maintenance to improve our services. The booking engine will be back online shortly. Thank you for your patience!</p>
+                        </div>
+                    `;
+                    // Also hide from price estimator
+                    const estTab = document.getElementById('estimatorTab');
+                    estTab.innerHTML = `<p style="text-align: center; padding: 3rem; color: var(--text-muted);">Estimator is offline during maintenance.</p>`;
+                }
+            } catch (err) { console.error('Settings check failed', err); }
+        }
+
+        async function loadUserData() {
+            const snapshot = await db.ref(`users/${currentUserId}`).once('value');
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('userName').textContent = data.name;
+                document.getElementById('custName').value = data.name;
+                document.getElementById('profileName').value = data.name;
+                document.getElementById('profileEmail').value = data.email;
+            }
+        }
+
+        async function loadMyBookings() {
+            db.ref('bookings').on('value', snapshot => {
+                const bookings = [];
+                snapshot.forEach(child => {
+                    if (child.val().userId === currentUserId) {
+                        bookings.push({ id: child.key, ...child.val() });
+                    }
+                });
+
+                updateDashboard(bookings);
+            });
+        }
+
+        function updateDashboard(bookings) {
+            document.getElementById('statTotal').textContent = bookings.length;
+            document.getElementById('statActive').textContent = bookings.filter(b => b.status === 'Confirmed' || b.status === 'In Transit').length;
+            document.getElementById('statCompleted').textContent = bookings.filter(b => b.status === 'Completed').length;
+
+            const recentDiv = document.getElementById('recentBookings');
+            const historyDiv = document.getElementById('historyList');
+            recentDiv.innerHTML = '';
+            historyDiv.innerHTML = '';
+
+            if (bookings.length === 0) {
+                recentDiv.innerHTML = '<div class="booking-card" style="justify-content: center; color: var(--text-muted);">No active moves found.</div>';
+                historyDiv.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 3rem;">No bookings found yet.</p>';
+                return;
+            }
+
+            const sortedBookings = [...bookings].reverse();
+
+            // Overview Tab (Recent 3)
+            sortedBookings.slice(0, 3).forEach(b => {
+                const card = document.createElement('div');
+                card.className = 'booking-card';
+                card.innerHTML = `
+                    <div>
+                        <h4 style="color: var(--primary-accent);">Move #${b.id.substring(0, 6).toUpperCase()}</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Route: ${b.pickup} to ${b.drop}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="status-badge" style="background: rgba(249, 115, 22, 0.2); color: var(--primary-accent); padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">${b.status.toUpperCase()}</span>
+                        <p style="font-size: 0.8rem; margin-top: 0.4rem;">Type: ${b.moveType}</p>
+                    </div>
+                `;
+                recentDiv.appendChild(card);
+            });
+
+            // History Tab (All)
+            sortedBookings.forEach(b => {
+                const card = document.createElement('div');
+                card.className = 'booking-card';
+                card.innerHTML = `
+                    <div>
+                        <h4 style="color: var(--primary-accent);">Order #${b.id.substring(0, 8).toUpperCase()}</h4>
+                        <p style="font-size: 0.85rem;">${b.pickup} <i class="fa-solid fa-arrow-right" style="font-size: 0.7rem;"></i> ${b.drop}</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem;">${new Date(b.createdAt).toLocaleDateString()} • ${b.moveType}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="display: block; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">${b.estimatedCost || 'Calculating...'}</span>
+                        <span class="status-badge" style="background: rgba(255,255,255,0.05); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.7rem;">${b.status}</span>
+                    </div>
+                `;
+                historyDiv.appendChild(card);
+            });
+        }
+
+        // Tab Switching
+        document.getElementById('menuOverview').onclick = () => {
+            showTab('overview');
+        };
+
+        document.getElementById('menuBook').onclick = () => {
+            showTab('book');
+        };
+
+        document.getElementById('menuEstimate').onclick = () => {
+            showTab('estimate');
+        };
+
+        document.getElementById('menuHistory').onclick = () => {
+            showTab('history');
+        };
+
+        document.getElementById('menuProfile').onclick = () => {
+            showTab('profile');
+        };
+
+        function showTab(tab) {
+            document.getElementById('overviewTab').style.display = tab === 'overview' ? 'block' : 'none';
+            document.getElementById('bookTab').style.display = tab === 'book' ? 'block' : 'none';
+            document.getElementById('estimateTab').style.display = tab === 'estimate' ? 'block' : 'none';
+            document.getElementById('historyTab').style.display = tab === 'history' ? 'block' : 'none';
+            document.getElementById('profileTab').style.display = tab === 'profile' ? 'block' : 'none';
+
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+            if (tab === 'overview') document.getElementById('menuOverview').classList.add('active');
+            if (tab === 'book') document.getElementById('menuBook').classList.add('active');
+            if (tab === 'estimate') document.getElementById('menuEstimate').classList.add('active');
+            if (tab === 'history') document.getElementById('menuHistory').classList.add('active');
+            if (tab === 'profile') document.getElementById('menuProfile').classList.add('active');
+        }
+
+        // Cost Calculation Logic
+        function calculateMovingCost(size, distance, vehicle = 'small', floor = 0, lift = 'yes') {
+            const sizeMap = { 1: 2500, 2: 4500, 3: 7000, 4: 10000, 5: 15000 };
+            let packing = sizeMap[size] || 3000;
+            let transport = 1500 + (distance * 40);
+
+            if (vehicle === 'medium') transport += 2000;
+            if (vehicle === 'large') transport += 5000;
+
+            let floorCost = (lift === 'no' && floor > 0) ? floor * 500 : 0;
+            let labor = Math.round((packing + transport) * 0.25);
+            let total = packing + transport + labor + floorCost;
+
+            return { packing, transport, labor, floorCost, total };
+        }
+
+        // Live Estimator Logic
+        const estInputs = ['estSize', 'estDistance', 'estFloor', 'estLift'];
+        estInputs.forEach(id => {
+            document.getElementById(id).addEventListener('change', updateLiveEstimate);
+            document.getElementById(id).addEventListener('input', updateLiveEstimate);
+        });
+
+        function updateLiveEstimate() {
+            const size = document.getElementById('estSize').value;
+            const dist = document.getElementById('estDistance').value;
+            const floor = document.getElementById('estFloor').value;
+            const lift = document.getElementById('estLift').value;
+
+            const res = calculateMovingCost(size, dist, 'small', floor, lift);
+
+            document.getElementById('estPacking').textContent = `₹${res.packing.toLocaleString()}`;
+            document.getElementById('estTransport').textContent = `₹${res.transport.toLocaleString()}`;
+            document.getElementById('estLabor').textContent = `₹${res.labor.toLocaleString()}`;
+            document.getElementById('estTotal').textContent = `₹${res.total.toLocaleString()}`;
+        }
+
+        // Live Booking Form Cost
+        const bookInputs = ['bookSize', 'bookDistance', 'bookVehicle'];
+        bookInputs.forEach(id => {
+            document.getElementById(id).addEventListener('change', updateBookingCost);
+            document.getElementById(id).addEventListener('input', updateBookingCost);
+        });
+
+        function updateBookingCost() {
+            const size = document.getElementById('bookSize').value;
+            const dist = document.getElementById('bookDistance').value;
+            const vehicle = document.getElementById('bookVehicle').value;
+
+            const res = calculateMovingCost(size, dist, vehicle);
+            document.getElementById('bookingEstimate').textContent = `₹${res.total.toLocaleString()}`;
+        }
+
+        function proceedToBooking() {
+            // Copy estimator values to booking form
+            document.getElementById('bookSize').value = document.getElementById('estSize').value;
+            document.getElementById('bookDistance').value = document.getElementById('estDistance').value;
+            updateBookingCost();
+            showTab('book');
+        }
+
+        // Handle New Booking
+        document.getElementById('bookingForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            const cost = document.getElementById('bookingEstimate').textContent;
+
+            const newBooking = {
+                userId: currentUserId,
+                name: document.getElementById('custName').value,
+                phone: document.getElementById('custPhone').value,
+                pickup: document.getElementById('pickupAddr').value,
+                drop: document.getElementById('dropAddr').value,
+                moveType: document.getElementById('moveType').value,
+                distance: document.getElementById('bookDistance').value,
+                propertySize: document.getElementById('bookSize').value,
+                estimatedCost: cost,
+                status: 'Pending Confirmation',
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            try {
+                await db.ref('bookings').push(newBooking);
+                alert('Booking Request Sent Successfully!\nYour estimated cost is ' + cost);
+                e.target.reset();
+                showTab('overview');
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirm & Book Move';
+            }
+        };
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                sessionStorage.removeItem('clientToken');
+                window.location.href = 'client-login.html';
+            });
+        }
+
+        function initMap() {
+            const vehicleLocation = [28.6139, 77.2090];
+            const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(vehicleLocation, 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            const truckIcon = L.icon({
+                iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048329.png',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+            L.marker(vehicleLocation, { icon: truckIcon }).addTo(map);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            updateLiveEstimate();
+            updateBookingCost();
+        });
+    </script>
+</body>
+
+</html>

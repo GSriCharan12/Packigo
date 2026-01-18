@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Sign Up - Packigo</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fa-solid fa-box-open"></i> Packigo<span>.</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="client-login.html">Login</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container section">
+        <div class="section-title">
+            <h2>Create an Account</h2>
+            <p>Join Packigo to manage your bookings and track your moves</p>
+        </div>
+
+        <div
+            style="max-width: 450px; margin: 0 auto; background: var(--surface-color); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: var(--shadow-soft);">
+            <form id="signupForm">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user"></i> Full Name</label>
+                    <input type="text" id="name" class="form-control" placeholder="John Doe" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="john@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign Up</button>
+
+                <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                    Already have an account? <a href="client-login.html" style="color: var(--primary-accent);">Login
+                        here</a>
+                </p>
+            </form>
+            <div id="message" style="margin-top: 1rem; text-align: center; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase configuration (Placeholder - User needs to fill this)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQBef6qDUFudB2A6aicZpOtQGyl722408",
+            authDomain: "packigo-app.firebaseapp.com",
+            projectId: "packigo-app",
+            databaseURL: "https://packigo-app-default-rtdb.firebaseio.com",
+            storageBucket: "packigo-app.firebasestorage.app",
+            messagingSenderId: "21357590788",
+            appId: "1:21357590788:web:b8d5213ab07a09d8d53851"
+        };
+
+        // Initialize Firebase
+        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            console.warn("Please configure your Firebase API keys in client-signup.html");
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // Check registration setting
+        async function checkSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                const settings = await res.json();
+                if (!settings.registration) {
+                    const form = document.getElementById('signupForm');
+                    form.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; background: rgba(239,68,68,0.1); border-radius: 12px; border: 1px solid rgba(239,68,68,0.2);">
+                            <i class="fa-solid fa-user-lock" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                            <h3 style="color: #fff; margin-bottom: 0.5rem;">Registration Closed</h3>
+                            <p style="color: var(--text-muted);">We are currently not accepting new account registrations. Please try again later.</p>
+                            <a href="index.html" class="btn btn-outline" style="margin-top: 1.5rem; display: inline-block;">Back to Home</a>
+                        </div>
+                    `;
+                }
+            } catch (err) { console.error('Settings check failed', err); }
+        }
+        checkSettings();
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const message = document.getElementById('message');
+
+            if (password !== confirmPassword) {
+                message.style.color = "#ef4444";
+                message.textContent = "Passwords do not match!";
+                return;
+            }
+
+            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                message.style.color = "#f97316";
+                message.textContent = "Demo Mode: Firebase not configured. Redirecting...";
+                setTimeout(() => window.location.href = 'client-login.html', 2000);
+                return;
+            }
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // Store additional user info in Realtime Database
+                await db.ref('users/' + user.uid).set({
+                    name: name,
+                    email: email,
+                    role: 'client',
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                message.style.color = "#22c55e";
+                message.textContent = "Registration successful! Signing out...";
+
+                // Important: Sign the user out immediately so they must login manually
+                await auth.signOut();
+
+                setTimeout(() => {
+                    window.location.href = 'client-login.html?signup=success';
+                }, 2000);
+            } catch (error) {
+                message.style.color = "#ef4444";
+                message.textContent = error.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

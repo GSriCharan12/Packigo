@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Login - Packigo</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fa-solid fa-box-open"></i> Packigo<span>.</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="client-signup.html">Sign Up</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container section">
+        <div class="section-title">
+            <h2>Welcome Back</h2>
+            <p>Login to track your shipment and manage bookings</p>
+        </div>
+
+        <div
+            style="max-width: 400px; margin: 0 auto; background: var(--surface-color); padding: 2.5rem; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: var(--shadow-soft);">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="email" class="form-control" placeholder="john@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <label
+                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                        <input type="checkbox"> Remember me
+                    </label>
+                    <a href="#" style="font-size: 0.85rem; color: var(--primary-accent);">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+
+                <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                    Don't have an account? <a href="client-signup.html" style="color: var(--primary-accent);">Sign up
+                        now</a>
+                </p>
+            </form>
+            <div id="message" style="margin-top: 1rem; text-align: center; font-size: 0.9rem;"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        // Use the same config as signup
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQBef6qDUFudB2A6aicZpOtQGyl722408",
+            authDomain: "packigo-app.firebaseapp.com",
+            projectId: "packigo-app",
+            databaseURL: "https://packigo-app-default-rtdb.firebaseio.com"
+        };
+
+        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+
+        // Check for signup success message
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('signup') === 'success') {
+                const message = document.getElementById('message');
+                message.style.color = "#22c55e";
+                message.textContent = "Account created successfully! Please login below.";
+            }
+        };
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const message = document.getElementById('message');
+
+            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                message.style.color = "#f97316";
+                message.textContent = "Demo Mode: Logging in...";
+                sessionStorage.setItem('clientToken', 'demo-token');
+                setTimeout(() => window.location.href = 'client-dashboard.html', 1500);
+                return;
+            }
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                message.style.color = "#22c55e";
+                message.textContent = "Login successful!";
+                window.location.href = 'client-dashboard.html';
+            } catch (error) {
+                message.style.color = "#ef4444";
+                message.textContent = error.message;
+            }
+        });
+    </script>
+</body>
+
+</html>

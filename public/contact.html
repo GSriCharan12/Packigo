@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Packigo</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fa-solid fa-box-open"></i> Packigo<span>.</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="contact.html" class="active">Contact</a></li>
+                </ul>
+                <a href="admin-login.html" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">
+                    <i class="fa-solid fa-lock"></i> Admin
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container section">
+        <div class="section-title">
+            <h2>Get in Touch</h2>
+            <p>We're here to help with your moving needs</p>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 3rem;">
+            <div>
+                <div
+                    style="background: var(--surface-color); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">Contact Information</h3>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: start;">
+                        <i class="fa-solid fa-location-dot"
+                            style="color: var(--primary-accent); font-size: 1.5rem; margin-top: 5px;"></i>
+                        <div>
+                            <h5 style="margin-bottom: 0.25rem;">Head Office</h5>
+                            <p style="color: #64748b;">123, Moving Lane, Logistics Park,<br>Metro City, India - 400001
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center;">
+                        <i class="fa-solid fa-phone" style="color: var(--primary-accent); font-size: 1.5rem;"></i>
+                        <div>
+                            <h5 style="margin-bottom: 0.25rem;">Phone</h5>
+                            <p style="color: #64748b;">+91 98765 43210</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <i class="fa-solid fa-envelope" style="color: var(--primary-accent); font-size: 1.5rem;"></i>
+                        <div>
+                            <h5 style="margin-bottom: 0.25rem;">Email</h5>
+                            <p style="color: #64748b;">support@packigo.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <form id="contactForm" action="https://formspree.io/f/xeeolbqv" method="POST"
+                    style="background: var(--surface-color); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow);">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">Send us a Message</h3>
+
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea name="message" rows="4" class="form-control" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
+                    <p id="msgSent" style="color: #22c55e; margin-top: 1rem; display: none; text-align: center;">
+                        <i class="fa-solid fa-check-circle"></i> Message Sent Successfully!
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            document.getElementById('msgSent').style.display = 'block';
+            this.reset();
+        });
+    </script>
+</body>
+
+</html>

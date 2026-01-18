@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Estimator - Packigo</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .estimator-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .result-box {
+            background: #f0f9ff;
+            border: 2px solid #bae6fd;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            display: none;
+            /* Hidden by default */
+            text-align: center;
+        }
+
+        .result-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+
+        .breakdown {
+            text-align: left;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: var(--secondary-color);
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fa-solid fa-box-open"></i> Packigo<span>.</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="estimator.html" class="active">Estimate</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+                <a href="admin-login.html" style="color: var(--text-muted); font-size: 0.85rem; text-decoration: none;">
+                    <i class="fa-solid fa-lock"></i> Admin
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container section">
+        <div class="section-title">
+            <h2>Instant Price Estimator</h2>
+            <p>Get an approximate moving cost in seconds</p>
+        </div>
+
+        <div class="estimator-container">
+            <form id="estimatorForm">
+                <div class="grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>House Size</label>
+                        <select id="houseSize" class="form-control" required>
+                            <option value="1">1 RK / Studio</option>
+                            <option value="2">1 BHK</option>
+                            <option value="3">2 BHK</option>
+                            <option value="4">3 BHK</option>
+                            <option value="5">Villa / 4+ BHK</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Approx. Distance (km)</label>
+                        <input type="number" id="distance" class="form-control" min="1" placeholder="e.g. 15" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Floor Number (Old House)</label>
+                        <input type="number" id="floor" class="form-control" min="0" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lift Available?</label>
+                        <select id="lift" class="form-control">
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vehicle Type</label>
+                        <select id="vehicle" class="form-control">
+                            <option value="small">Pickup Truck (Small)</option>
+                            <option value="medium">Standard Truck (Medium)</option>
+                            <option value="large">Large Container (Large)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Move Date</label>
+                        <input type="date" id="date" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group" style="text-align: center; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="width: 200px;">Calculate Cost</button>
+                </div>
+            </form>
+
+            <div id="resultBox" class="result-box">
+                <h4>Estimated Cost</h4>
+                <div class="result-price" id="totalPrice">₹0</div>
+                <p style="font-size: 0.8rem; color: #64748b;">*Prices are approximate and subject to final survey.</p>
+
+                <div class="breakdown">
+                    <div class="breakdown-row">
+                        <span>Packing Charges</span>
+                        <span id="packingCost">₹0</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>Transportation</span>
+                        <span id="transportCost">₹0</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>Labor (Loading/Unloading)</span>
+                        <span id="laborCost">₹0</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>Floor/Lift Charges</span>
+                        <span id="floorCost">₹0</span>
+                    </div>
+                    <div class="breakdown-row"
+                        style="font-weight: 600; border-bottom: none; border-top: 1px solid #cbd5e1; margin-top: 0.5rem; padding-top: 0.5rem;">
+                        <span>Total Estimate</span>
+                        <span id="totalCostDisplay">₹0</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <a href="client-login.html" class="btn btn-primary">Proceed to Login & Book</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check Auth
+        if (!sessionStorage.getItem('clientToken')) {
+            window.location.href = 'client-login.html';
+        }
+    </script>
+    <script src="js/estimator.js"></script>
+</body>
+
+</html>

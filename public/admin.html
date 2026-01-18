@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Dashboard - Packigo Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-grid {
+            display: flex;
+            min-height: 100vh;
+            background: #0a0a0b;
+        }
+
+        /* Fix for Select Options in Dark Mode */
+        select option {
+            background-color: #111114;
+            color: #fff;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #111114;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2.5rem;
+            max-width: calc(100% - 280px);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-bottom: 0.25rem;
+            transition: 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .main-content {
+            padding: 2rem;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card h4 {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .booking-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.75rem;
+        }
+
+        .booking-table th {
+            text-align: left;
+            padding: 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .booking-row {
+            background: var(--surface-color);
+            transition: 0.3s;
+        }
+
+        .booking-row:hover {
+            background: var(--surface-hover);
+            transform: scale(1.005);
+        }
+
+        .booking-row td {
+            padding: 1.25rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .booking-row td:first-child {
+            border-left: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 12px 0 0 12px;
+        }
+
+        .booking-row td:last-child {
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 0 12px 12px 0;
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-pending {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--primary-accent);
+        }
+
+        .badge-confirmed {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+        }
+
+        .badge-completed {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .badge-cancelled {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .status-select {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .status-select:focus {
+            border-color: #ef4444;
+        }
+
+        .status-select option {
+            background: #111827;
+            color: #fff;
+        }
+
+        @media (max-width: 1200px) {
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body style="background: #0a0a0b;">
+    <!-- Auth Check -->
+    <script>
+        if (!sessionStorage.getItem('isAdminLoggedIn')) {
+            window.location.href = 'admin-login.html';
+        }
+        function logout() {
+            sessionStorage.removeItem('isAdminLoggedIn');
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+
+    <div class="admin-grid">
+        <aside class="sidebar">
+            <div class="logo" style="margin-bottom: 3rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-shield-halved" style="color: #ef4444; font-size: 1.5rem;"></i>
+                <div>
+                    Packigo
+                    <span
+                        style="font-size: 0.5em; background: rgba(255,255,255,0.1); color: var(--text-muted); padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-left: 4px; letter-spacing: 1px; font-weight: 600;">ADMIN</span>
+                </div>
+            </div>
+
+            <div class="sidebar-nav" style="flex: 1;">
+                <a href="javascript:void(0)" onclick="switchTab('bookings')" id="nav-bookings"
+                    class="sidebar-item active">
+                    <i class="fa-solid fa-list-check"></i> Bookings
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('customers')" id="nav-customers" class="sidebar-item">
+                    <i class="fa-solid fa-users"></i> Customers
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('fleet')" id="nav-fleet" class="sidebar-item">
+                    <i class="fa-solid fa-truck-moving"></i> Fleet Management
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('analytics')" id="nav-analytics" class="sidebar-item">
+                    <i class="fa-solid fa-chart-line"></i> Analytics
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('settings')" id="nav-settings" class="sidebar-item">
+                    <i class="fa-solid fa-gear"></i> System Settings</a>
+            </div>
+
+            <div style="padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                <a href="index.html" class="sidebar-item"><i class="fa-solid fa-globe"></i> View Website</a>
+                <a href="javascript:void(0)" onclick="logout()" class="sidebar-item"
+                    style="color: #ef4444; margin-top: 0.5rem;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout Dashboard
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h1 style="font-size: 2rem; margin-bottom: 0.5rem; color: #fff;">Booking Management</h1>
+                    <p style="color: var(--text-muted);">Real-time control center for relocation requests</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button id="syncBtn" onclick="handleSync()" class="btn btn-outline"
+                        style="border-color: rgba(255,255,255,0.1); color: #fff; transition: 0.3s;"><i
+                            class="fa-solid fa-rotate"></i>
+                        Sync Data</button>
+                    <button onclick="openManualBookingModal()" class="btn btn-primary"
+                        style="background: #ef4444; border: none; color: #fff;"><i class="fa-solid fa-plus"></i> Manual
+                        Booking</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <h4>Total Moves</h4>
+                    <div class="value" id="totalMoves">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Active In-Transit</h4>
+                    <div class="value" id="activeMoves">0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Revenue (Est)</h4>
+                    <div class="value" id="totalRevenue">₹0</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Success Rate</h4>
+                    <div class="value" id="successRate">100%</div>
+                </div>
+            </div>
+
+            <div id="bookingsTab">
+                <div
+                    style="background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.03);">
+                    <table class="booking-table">
+                        <thead>
+                            <tr>
+                                <th>IDENTIFIER / DATE</th>
+                                <th>CUSTOMER DETAILS</th>
+                                <th>ROUTE & TYPE</th>
+                                <th>ESTIMATED COST</th>
+                                <th>CURRENT STATUS</th>
+                                <th>MANAGEMENT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsBody">
+                            <tr>
+                                <td colspan="7" style="text-align:center; padding: 4rem;">Loading bookings...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="customersTab" style="display: none;">
+                <div
+                    style="background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.03);">
+                    <h2 style="margin-bottom: 2rem; color: #fff;">Registered Customers</h2>
+                    <table class="booking-table">
+                        <thead>
+                            <tr>
+                                <th>USER ID</th>
+                                <th>FULL NAME</th>
+                                <th>EMAIL ADDRESS</th>
+                                <th>JOINED DATE</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding: 4rem;">Loading customers...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="fleetTab" style="display: none;">
+                <div
+                    style="background: rgba(255,255,255,0.02); padding: 2.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.03);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="color: #fff;">Fleet Management</h2>
+                        <button onclick="openFleetModal()" class="btn btn-primary"
+                            style="background: #ef4444; border: none;"><i class="fa-solid fa-plus"></i> Add
+                            Vehicle</button>
+                    </div>
+
+                    <div id="fleetList" class="grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <p style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 3rem;">
+                            Loading fleet assets...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fleet Modal -->
+            <div id="fleetModal"
+                style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 2rem;">
+                <div
+                    style="background: #111114; width: 100%; max-width: 450px; padding: 2.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+                    <button onclick="closeFleetModal()"
+                        style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: #fff; cursor: pointer;"><i
+                            class="fa-solid fa-xmark"></i></button>
+                    <h2 style="margin-bottom: 2rem; color: #ef4444;" id="fleetModalTitle">Add New Vehicle</h2>
+                    <form id="fleetForm" onsubmit="handleFleetSubmit(event)">
+                        <input type="hidden" id="vehicleId">
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label style="color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Vehicle Name
+                                / ID</label>
+                            <input type="text" id="vName" class="status-select" style="width: 100%; padding: 0.8rem;"
+                                placeholder="e.g. Truck #PK-TR01" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label style="color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Vehicle
+                                Type</label>
+                            <select id="vType" class="status-select" style="width: 100%; padding: 0.8rem;" required>
+                                <option value="Small Pickup">Small Pickup</option>
+                                <option value="Medium Truck">Medium Truck</option>
+                                <option value="Large Container">Large Container</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 2rem;">
+                            <label style="color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Initial
+                                Status</label>
+                            <select id="vStatus" class="status-select" style="width: 100%; padding: 0.8rem;" required>
+                                <option value="Available">Available</option>
+                                <option value="In Transit">On Delivery</option>
+                                <option value="Maintenance">In Maintenance</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary"
+                            style="width: 100%; background: #ef4444; border: none;">Save Vehicle Asset</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="analyticsTab" style="display: none;">
+                <div class="analytics-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="stat-card"
+                        style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(0,0,0,0) 100%);">
+                        <h4 style="color: #ef4444; font-size: 0.8rem; text-transform: uppercase;">Average Order Value
+                        </h4>
+                        <div class="value" id="avgOrderValue">₹0</div>
+                    </div>
+                    <div class="stat-card"
+                        style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0,0,0,0) 100%);">
+                        <h4 style="color: #22c55e; font-size: 0.8rem; text-transform: uppercase;">Retention Rate</h4>
+                        <div class="value" id="retentionRate">0%</div>
+                    </div>
+                    <div class="stat-card"
+                        style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(0,0,0,0) 100%);">
+                        <h4 style="color: #3b82f6; font-size: 0.8rem; text-transform: uppercase;">Fleet Utilization</h4>
+                        <div class="value" id="fleetUtil">0%</div>
+                    </div>
+                </div>
+
+                <div
+                    style="background: rgba(255,255,255,0.02); padding: 2.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.03);">
+                    <h2 style="margin-bottom: 1.5rem; color: #fff;">Operational Insights</h2>
+                    <div id="analyticsContainer" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 12px;">
+                            <span>Top Performing Route</span>
+                            <span id="topRoute" style="font-weight: 600; color: #ef4444;">--</span>
+                        </div>
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 12px;">
+                            <span>Most Popular Move Size</span>
+                            <span id="popularMove" style="font-weight: 600; color: #ef4444;">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settingsTab" style="display: none;">
+                <div
+                    style="background: rgba(255,255,255,0.02); padding: 2.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.03);">
+                    <h2 style="margin-bottom: 2rem; color: #fff;">System Configuration</h2>
+
+                    <div style="display: grid; gap: 1.5rem; max-width: 600px;">
+                        <!-- Setting Item -->
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 1.2rem; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <div style="font-weight: 600; color: #fff; margin-bottom: 0.2rem;">Client Registration
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Allow new users to create
+                                    accounts</div>
+                            </div>
+                            <div id="toggle-registration" onclick="handleSettingToggle('registration')"
+                                class="toggle-switch"
+                                style="width: 50px; height: 26px; background: #374151; border-radius: 50px; cursor: pointer; position: relative; transition: 0.3s;">
+                                <div class="toggle-handle"
+                                    style="width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Setting Item -->
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 1.2rem; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <div style="font-weight: 600; color: #fff; margin-bottom: 0.2rem;">Maintenance Mode
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Block all client-side booking
+                                    activities</div>
+                            </div>
+                            <div id="toggle-maintenance" onclick="handleSettingToggle('maintenance')"
+                                class="toggle-switch"
+                                style="width: 50px; height: 26px; background: #374151; border-radius: 50px; cursor: pointer; position: relative; transition: 0.3s;">
+                                <div class="toggle-handle"
+                                    style="width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Setting Item -->
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 1.2rem; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <div style="font-weight: 600; color: #fff; margin-bottom: 0.2rem;">Automated Invoicing
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Send PDF invoice after
+                                    completion</div>
+                            </div>
+                            <div id="toggle-invoicing" onclick="handleSettingToggle('invoicing')" class="toggle-switch"
+                                style="width: 50px; height: 26px; background: #374151; border-radius: 50px; cursor: pointer; position: relative; transition: 0.3s;">
+                                <div class="toggle-handle"
+                                    style="width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Booking Modal -->
+            <div id="manualBookingModal"
+                style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 2rem;">
+                <div
+                    style="background: #111114; width: 100%; max-width: 500px; padding: 2.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+                    <button onclick="document.getElementById('manualBookingModal').style.display = 'none'"
+                        style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: #fff; cursor: pointer; font-size: 1.25rem;"><i
+                            class="fa-solid fa-xmark"></i></button>
+                    <h2 style="margin-bottom: 2rem; color: #fff;">Create New Booking</h2>
+                    <form onsubmit="handleManualBookingSubmit(event)">
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Select
+                                Customer</label>
+                            <select id="mbCustomer" required class="form-control"
+                                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding: 0.8rem; border-radius: 8px;">
+                                <option value="">Loading customers...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Pickup
+                                Location</label>
+                            <input type="text" id="mbPickup" required class="form-control"
+                                placeholder="e.g. Andheri East, Mumbai"
+                                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding: 0.8rem; border-radius: 8px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Drop
+                                Location</label>
+                            <input type="text" id="mbDrop" required class="form-control"
+                                placeholder="e.g. Koregaon Park, Pune"
+                                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding: 0.8rem; border-radius: 8px;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <label
+                                    style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Date</label>
+                                <input type="date" id="mbDate" required class="form-control"
+                                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding: 0.8rem; border-radius: 8px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Move
+                                    Size</label>
+                                <select id="mbSize" required class="form-control"
+                                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding: 0.8rem; border-radius: 8px;">
+                                    <option value="1 BHK">1 BHK</option>
+                                    <option value="2 BHK">2 BHK</option>
+                                    <option value="3 BHK">3 BHK</option>
+                                    <option value="Villa / Bungalow">Villa / Bungalow</option>
+                                    <option value="Office Move">Office Move</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 2rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Estimated
+                                Cost (₹)</label>
+                            <input type="number" id="mbCost" required class="form-control" placeholder="0"
+                                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding: 0.8rem; border-radius: 8px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary"
+                            style="width: 100%; background: #ef4444; border: none; padding: 1rem; font-weight: 600;">Confirm
+                            Booking</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Customer Profile Modal -->
+            <div id="customerModal"
+                style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 2rem;">
+                <div
+                    style="background: #111114; width: 100%; max-width: 500px; padding: 2.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+                    <button onclick="closeCustomerModal()"
+                        style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: #fff; cursor: pointer; font-size: 1.25rem;"><i
+                            class="fa-solid fa-xmark"></i></button>
+                    <h2 style="margin-bottom: 2rem; color: #ef4444;">Customer Profile</h2>
+                    <div id="modalContent" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <!-- Content here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        let activeTab = 'bookings';
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('bookingsTab').style.display = tab === 'bookings' ? 'block' : 'none';
+            document.getElementById('customersTab').style.display = tab === 'customers' ? 'block' : 'none';
+            document.getElementById('fleetTab').style.display = tab === 'fleet' ? 'block' : 'none';
+            document.getElementById('analyticsTab').style.display = tab === 'analytics' ? 'block' : 'none';
+            document.getElementById('settingsTab').style.display = tab === 'settings' ? 'block' : 'none';
+
+            // Hide stats row for settings/analytics/fleet to keep it clean
+            const statsRow = document.querySelector('.stats-row');
+            if (statsRow) {
+                statsRow.style.display = (tab === 'bookings' || tab === 'fleet' || tab === 'analytics') ? 'grid' : 'none';
+                // Actually let's keep stats for bookings/fleet/analytics but hide for settings
+                if (tab === 'settings' || tab === 'customers') {
+                    statsRow.style.display = 'none';
+                } else {
+                    statsRow.style.display = 'grid';
+                }
+            }
+            // Update Page Title
+            const titles = {
+                'bookings': 'Booking Management',
+                'customers': 'Customer Directory',
+                'fleet': 'Logistics Fleet',
+                'analytics': 'Performance Analytics',
+                'settings': 'System Control'
+            };
+            document.querySelector('.main-content h1').textContent = titles[tab] || 'Control Center';
+
+            // Update sidebar UI
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            if (document.getElementById(`nav-${tab}`)) {
+                document.getElementById(`nav-${tab}`).classList.add('active');
+            }
+
+            syncCurrentTab();
+        }
+
+        function syncCurrentTab() {
+            if (activeTab === 'bookings') loadBookings();
+            if (activeTab === 'customers') loadCustomers();
+            if (activeTab === 'fleet') loadFleet();
+            if (activeTab === 'analytics') loadAnalytics();
+            if (activeTab === 'settings') loadSettings();
+        }
+
+        let currentSettings = { registration: true, maintenance: false, invoicing: true };
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                currentSettings = await response.json();
+                updateSettingsUI();
+            } catch (err) { console.error('Settings load error:', err); }
+        }
+
+        function updateSettingsUI() {
+            console.log('Updating Settings UI:', currentSettings);
+            Object.keys(currentSettings).forEach(key => {
+                const toggle = document.getElementById(`toggle-${key}`);
+                if (!toggle) {
+                    console.warn(`Toggle element for ${key} not found`);
+                    return;
+                }
+                const handle = toggle.querySelector('.toggle-handle');
+
+                if (currentSettings[key]) {
+                    toggle.style.background = '#22c55e';
+                    handle.style.transform = 'translateX(24px)';
+                } else {
+                    toggle.style.background = '#374151';
+                    handle.style.transform = 'translateX(0px)';
+                }
+            });
+        }
+
+        async function handleSettingToggle(key) {
+            console.log(`Toggling setting: ${key}`);
+            const newValue = !currentSettings[key];
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [key]: newValue })
+                });
+                if (response.ok) {
+                    currentSettings[key] = newValue;
+                    updateSettingsUI();
+                    console.log(`Setting ${key} updated to ${newValue}`);
+                } else {
+                    console.error('Failed to update setting', response.status);
+                }
+            } catch (err) {
+                console.error('Network error during toggle', err);
+                alert('Connection error. Please check if server is running.');
+            }
+        }
+
+
+        async function handleSync() {
+            const btn = document.getElementById('syncBtn');
+            const icon = btn.querySelector('i');
+
+            // Visual feedback
+            icon.classList.add('fa-spin');
+            btn.style.opacity = '0.7';
+            btn.innerHTML = '<i class="fa-solid fa-rotate fa-spin"></i> Syncing...';
+
+            await syncCurrentTab();
+
+            // Reset after short delay
+            setTimeout(() => {
+                icon.classList.remove('fa-spin');
+                btn.style.opacity = '1';
+                btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Sync Data';
+            }, 800);
+        }
+
+        async function openManualBookingModal() {
+            const modal = document.getElementById('manualBookingModal');
+            const select = document.getElementById('mbCustomer');
+
+            modal.style.display = 'flex';
+            select.innerHTML = '<option value="">Loading...</option>';
+
+            try {
+                const response = await fetch('/api/users');
+                const users = await response.json();
+
+                select.innerHTML = '<option value="">Select a Customer</option>';
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    // Store userId and name in value for easy access, separated by |
+                    option.value = `${user.id}|${user.name}|${user.phone || ''}`;
+                    option.textContent = `${user.name} (${user.email})`;
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                console.error(err);
+                select.innerHTML = '<option value="">Failed to load customers</option>';
+            }
+        }
+
+        async function handleManualBookingSubmit(e) {
+            e.preventDefault();
+            const customerVal = document.getElementById('mbCustomer').value;
+            if (!customerVal) {
+                alert('Please select a customer');
+                return;
+            }
+
+            const [userId, name, phone] = customerVal.split('|');
+
+            const bookingData = {
+                userId: userId,
+                name: name,
+                phone: phone, // Pass stored phone number
+                email: 'manual@admin.com', // Placeholder or fetch actual if needed
+                pickup: document.getElementById('mbPickup').value,
+                drop: document.getElementById('mbDrop').value,
+                date: document.getElementById('mbDate').value,
+                moveType: document.getElementById('mbSize').value,
+                estimatedCost: '₹' + parseInt(document.getElementById('mbCost').value).toLocaleString(),
+                distance: 'Admin Manual Entry',
+                status: 'Confirmed' // Admin bookings start as Confirmed usually
+            };
+
+            try {
+                const res = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+
+                if (res.ok) {
+                    document.getElementById('manualBookingModal').style.display = 'none';
+                    loadBookings();
+                    alert('Booking created successfully!');
+                    e.target.reset();
+                } else {
+                    alert('Failed to create booking');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Server connection failed');
+            }
+        }
+
+        async function loadAnalytics() {
+            try {
+                const bResponse = await fetch('/api/bookings');
+                const bookings = await bResponse.json();
+                const fResponse = await fetch('/api/fleet');
+                const fleet = await fResponse.json();
+
+                // Calculate Avg Order Value
+                const totalCost = bookings.reduce((sum, b) => {
+                    const price = parseInt(b.estimatedCost ? b.estimatedCost.replace('₹', '').replace(',', '') : 0);
+                    return sum + price;
+                }, 0);
+                const avg = bookings.length > 0 ? Math.round(totalCost / bookings.length) : 0;
+                document.getElementById('avgOrderValue').textContent = `₹${avg.toLocaleString()}`;
+
+                // Calculate Fleet Utilization
+                const inTransit = fleet.filter(v => v.status === 'In Transit').length;
+                const util = fleet.length > 0 ? Math.round((inTransit / fleet.length) * 100) : 0;
+                document.getElementById('fleetUtil').textContent = `${util}%`;
+
+                // Calculate Retention Rate (Repeat Customers / Total Customers)
+                // We use phone number as unique identifier
+                const totalBookings = bookings.length;
+                if (totalBookings > 0) {
+                    const uniqueCustomers = new Set(bookings.map(b => b.phone)).size;
+                    // If 10 bookings, 8 unique => 2 repeats. 
+                    // Simple retention formula: % of bookings that are from repeat customers? 
+                    // Or just (1 - unique/total) * 100? Let's do (Total - Unique) / Total * 100 for "Repeat Rate"
+                    // Or if 1 customer has 2 bookings, retention is 100%? 
+                    // Let's stick to standard: (Repeat Customers / Total Unique Customers) * 100
+                    // Count occurrences
+                    const counts = {};
+                    bookings.forEach(b => { counts[b.phone] = (counts[b.phone] || 0) + 1; });
+                    const repeatCustomers = Object.values(counts).filter(c => c > 1).length;
+                    const retention = uniqueCustomers > 0 ? Math.round((repeatCustomers / uniqueCustomers) * 100) : 0;
+                    document.getElementById('retentionRate').textContent = `${retention}%`;
+                } else {
+                    document.getElementById('retentionRate').textContent = '0%';
+                }
+
+                // Calculate Top Route & Popular Move
+                if (totalBookings > 0) {
+                    // Top Route
+                    const routes = {};
+                    bookings.forEach(b => {
+                        // Simple extraction of City from address if possible, else use full string logic
+                        // Let's just use the full string pair for now, or split by comma to get city
+                        const getCity = (addr) => {
+                            if (!addr) return 'Unknown';
+                            const parts = addr.split(',');
+                            return parts.length > 1 ? parts[parts.length - 1].trim() : addr.trim();
+                        };
+                        const route = `${getCity(b.pickup)} - ${getCity(b.drop)}`;
+                        routes[route] = (routes[route] || 0) + 1;
+                    });
+                    const topRoute = Object.entries(routes).sort((a, b) => b[1] - a[1])[0];
+                    document.getElementById('topRoute').textContent = topRoute ? topRoute[0] : 'N/A';
+
+                    // Popular Move Size (replacing vehicle type)
+                    const sizes = {};
+                    bookings.forEach(b => {
+                        const size = b.moveType || 'Unknown';
+                        sizes[size] = (sizes[size] || 0) + 1;
+                    });
+                    const popularSize = Object.entries(sizes).sort((a, b) => b[1] - a[1])[0];
+                    if (document.getElementById('popularMove')) {
+                        document.getElementById('popularMove').textContent = popularSize ? popularSize[0] : 'N/A';
+                    }
+                }
+
+
+            } catch (err) {
+                console.error('Analytics load error:', err);
+            }
+        }
+
+        async function loadFleet() {
+            const list = document.getElementById('fleetList');
+            try {
+                const response = await fetch('/api/fleet');
+                const fleet = await response.json();
+
+                list.innerHTML = '';
+                if (fleet.length === 0) {
+                    list.innerHTML = '<p style="text-align: center; color: var(--text-muted); grid-column: 1/-1; padding: 3rem;">No vehicle assets registered. Add your first truck.</p>';
+                    return;
+                }
+
+                fleet.forEach(v => {
+                    const card = document.createElement('div');
+                    card.className = 'stat-card';
+                    card.style.position = 'relative';
+
+                    let statusColor = '#22c55e';
+                    if (v.status === 'Maintenance') statusColor = '#ef4444';
+                    if (v.status === 'In Transit') statusColor = '#3b82f6';
+
+                    card.innerHTML = `
+                        <div style="position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem;">
+                            <button onclick="deleteVehicle('${v.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.9rem;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        <i class="fa-solid fa-truck" style="color: #ef4444; font-size: 1.5rem; margin-bottom: 1rem;"></i>
+                        <h4 style="margin-bottom: 0.2rem;">${v.name}</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.8rem;">${v.type}</p>
+                        <select onchange="updateVehicleStatus('${v.id}', this.value)" class="status-select" style="width: 100%; padding: 0.4rem; font-size: 0.75rem;">
+                            <option value="Available" ${v.status === 'Available' ? 'selected' : ''}>Available</option>
+                            <option value="In Transit" ${v.status === 'In Transit' ? 'selected' : ''}>On Delivery</option>
+                            <option value="Maintenance" ${v.status === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
+                        </select>
+                    `;
+                    list.appendChild(card);
+                });
+            } catch (err) {
+                console.error('Fleet load error:', err); // Silent fail for background sync
+                list.innerHTML = '<p style="text-align: center; color: #ef4444; grid-column: 1/-1;">Connection to fleet data failed.</p>';
+            }
+        }
+
+        function openFleetModal() {
+            document.getElementById('fleetModal').style.display = 'flex';
+        }
+
+        function closeFleetModal() {
+            document.getElementById('fleetModal').style.display = 'none';
+        }
+
+        async function handleFleetSubmit(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('vName').value,
+                type: document.getElementById('vType').value,
+                status: document.getElementById('vStatus').value
+            };
+
+            try {
+                const response = await fetch('/api/fleet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    closeFleetModal();
+                    loadFleet();
+                } else {
+                    const err = await response.json();
+                    alert(`Failed to save: ${err.error || 'Server error'}`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection to server failed.');
+            }
+        }
+
+        async function updateVehicleStatus(id, status) {
+            try {
+                const response = await fetch(`/api/fleet/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    alert(`Update failed: ${err.error || 'Server error'}`);
+                }
+            } catch (err) { alert('Update failed'); }
+        }
+
+        async function deleteVehicle(id) {
+            if (!confirm('Remove this vehicle?')) return;
+            try {
+                const response = await fetch(`/api/fleet/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    loadFleet();
+                } else {
+                    const err = await response.json();
+                    alert(`Delete failed: ${err.error || 'Server error'}`);
+                }
+            } catch (err) { alert('Delete failed'); }
+        }
+
+        async function loadCustomers() {
+            const tbody = document.getElementById('customersBody');
+            try {
+                // We need an API for this or use direct Firebase if we trust admin panel
+                // Let's check if the server has a users route
+                const response = await fetch('/api/users');
+                const users = await response.json();
+
+                tbody.innerHTML = '';
+                users.forEach(user => {
+                    // Sanitize name for onclick to prevent syntax errors with quotes
+                    const safeName = user.name.replace(/'/g, "\\'");
+                    const safeEmail = user.email.replace(/'/g, "\\'");
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'booking-row';
+                    tr.innerHTML = `
+                        <td><span style="font-family: monospace; font-size: 0.8rem; opacity: 0.6;">${user.id.substring(0, 8)}...</span></td>
+                        <td><span style="font-weight: 600;">${user.name}</span></td>
+                        <td>${user.email}</td>
+                        <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-outline" onclick="viewCustomerProfile('${safeName}', '${safeEmail}', '${user.id}', '${user.createdAt || ''}')" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">View Profile</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Customers load error:', err);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: #ef4444;">Failed to load user data.</td></tr>';
+            }
+        }
+
+        function viewCustomerProfile(name, email, id, date) {
+            const content = document.getElementById('modalContent');
+            content.innerHTML = `
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Full Name</label>
+                    <div style="font-size: 1.2rem; font-weight: 600; color: #fff;">${name}</div>
+                </div>
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Email Address</label>
+                    <div style="font-size: 1rem; color: #fff;">${email}</div>
+                </div>
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">System User ID</label>
+                    <div style="font-size: 0.9rem; font-family: monospace; color: var(--text-muted);">${id}</div>
+                </div>
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Registration Date</label>
+                    <div style="font-size: 1rem; color: #fff;">${date && date !== 'undefined' ? new Date(parseInt(date) || date).toLocaleString() : 'Date not recorded'}</div>
+                </div>
+            `;
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+
+        function closeCustomerModal() {
+            document.getElementById('customerModal').style.display = 'none';
+        }
+
+        async function loadBookings() {
+            const tbody = document.getElementById('bookingsBody');
+            try {
+                const response = await fetch('/api/bookings');
+                const bookings = await response.json();
+
+                tbody.innerHTML = '';
+                document.getElementById('totalMoves').textContent = bookings.length;
+                document.getElementById('activeMoves').textContent = bookings.filter(b => b.status === 'Confirmed' || b.status === 'In Transit').length;
+
+                // Calculate Revenue
+                let rev = 0;
+                bookings.forEach(b => {
+                    if (b.estimatedCost) {
+                        const num = parseInt(b.estimatedCost.replace(/[^\d]/g, ''));
+                        if (!isNaN(num)) rev += num;
+                    }
+                });
+                document.getElementById('totalRevenue').textContent = rev >= 100000 ? `₹${(rev / 100000).toFixed(2)}L` : `₹${rev.toLocaleString()}`;
+
+                const completed = bookings.filter(b => b.status === 'Completed').length;
+                const total = bookings.length;
+                document.getElementById('successRate').textContent = total > 0 ? `${Math.round((completed / total) * 100)}%` : '100%';
+
+                if (bookings.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 4rem; color: var(--text-muted);">No booking data available.</td></tr>';
+                    return;
+                }
+
+                bookings.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+                bookings.forEach(booking => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'booking-row';
+
+                    let badgeClass = 'badge-pending';
+                    if (booking.status.toLowerCase().includes('confirm') || booking.status.toLowerCase().includes('transit')) badgeClass = 'badge-confirmed';
+                    if (booking.status.toLowerCase().includes('complete')) badgeClass = 'badge-completed';
+                    if (booking.status.toLowerCase().includes('cancel')) badgeClass = 'badge-cancelled';
+
+                    tr.innerHTML = `
+                        <td>
+                            <div style="font-weight: 600;">#PK-${booking.id.substring(0, 6).toUpperCase()}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">${new Date(booking.createdAt).toLocaleDateString()}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">${booking.name}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">${booking.phone}</div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem;"><i class="fa-solid fa-map-pin" style="color: #ef4444;"></i> ${booking.pickup}</div>
+                            <div style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-right" style="font-size: 0.7rem; opacity: 0.5;"></i> ${booking.drop}</div>
+                            <div style="font-size: 0.75rem; color: #ef4444; margin-top: 0.2rem; text-transform: uppercase;">${booking.moveType}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700; color: #fff; font-size: 1.1rem;">${booking.estimatedCost || 'N/A'}</div>
+                        </td>
+                        <td>
+                            <span class="badge ${badgeClass}">${booking.status}</span>
+                        </td>
+                        <td>
+                            <select class="status-select" onchange="updateStatus('${booking.id}', this.value)">
+                                <option value="">Action...</option>
+                                <option value="Pending Confirmation">Pending</option>
+                                <option value="Confirmed">Confirm / In-Transit</option>
+                                <option value="Completed">Set Completed</option>
+                                <option value="Cancelled">Cancel Order</option>
+                                <option value="DELETE" style="color: #ef4444;">Remove Record</option>
+                            </select>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: #ef4444;">Failed to sync with cloud database.</td></tr>';
+            }
+        }
+
+        async function updateStatus(id, newStatus) {
+            if (!newStatus) return;
+            if (newStatus === 'DELETE') {
+                if (!confirm('Permanently delete this record?')) return;
+                try {
+                    const response = await fetch(`/api/bookings/${id}`, { method: 'DELETE' }); // If delete route exists
+                    if (response.ok) loadBookings();
+                } catch (err) { alert('Delete failed'); }
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/bookings/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    if (newStatus === 'Completed' && currentSettings.invoicing) {
+                        alert('Order marked as Completed! Automated PDF invoice has been generated and queued for sending to client.');
+                    }
+                    loadBookings();
+                }
+            } catch (e) {
+                console.error('Update failed:', e);
+                // alert('Connection to server failed.'); // disabled to prevent loops
+            }
+        }
+
+        socket.on('booking_update', () => loadBookings());
+        socket.on('fleet_update', () => loadFleet());
+        socket.on('settings_update', (data) => {
+            currentSettings = data;
+            updateSettingsUI();
+        });
+        document.addEventListener('DOMContentLoaded', loadBookings);
+    </script>
+</body>
+
+</html>
