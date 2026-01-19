@@ -32,4 +32,15 @@ We accept Pull Requests (PRs) for bug fixes and feature enhancements.
 - **NEVER** commit `serviceAccountKey.json` or any real API keys.
 - Check `.gitignore` before pushing.
 
+## 👥 Core Team & Credits
+
+This project was brought to life by the following engineers:
+
+| Module | Contributor |
+| :--- | :--- |
+| **Frontend Architecture** | G Sri Charan |
+| **Backend Systems** | Krishna Mishra |
+| **Database Management** | Srihari Dounde |
+| **Authentiction & Real-time Engine** | Dhanwanth Singh |
+
 Happy Coding! 🚀
