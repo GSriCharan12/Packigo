@@ -66,7 +66,3 @@ This project is configured for one-click deployment on Railway.
 
 ## 🤝 Contributing
 Contributions are welcome! Please read `CONTRIBUTING.md` for details on our code of conduct and the process for submitting pull requests.
-
----
-
-**Developed with ❤️ by Sri Charan**
