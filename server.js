@@ -10,18 +10,31 @@ const admin = require('firebase-admin');
 
 // Service account key (Users should place their serviceAccountKey.json in the root)
 const serviceAccountPath = path.join(__dirname, 'serviceAccountKey.json');
-if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = require(serviceAccountPath);
+let serviceAccount;
+
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        console.log('Loaded Firebase credentials from environment variable');
+    } catch (e) {
+        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT env var', e);
+    }
+} else if (fs.existsSync(serviceAccountPath)) {
+    serviceAccount = require(serviceAccountPath);
+    console.log('Loaded Firebase credentials from file');
+}
+
+if (serviceAccount) {
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         databaseURL: "https://packigo-app-default-rtdb.firebaseio.com"
     });
     console.log('Firebase initialized with Realtime Database');
 } else {
-    console.warn('serviceAccountKey.json not found. Realtime Database will not work.');
+    console.warn('No valid credentials found. Realtime Database will not work.');
 }
 
-const db = fs.existsSync(serviceAccountPath) ? admin.database() : null;
+const db = serviceAccount ? admin.database() : null;
 
 const app = express();
 const server = http.createServer(app);
