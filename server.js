@@ -282,19 +282,6 @@ app.patch('/api/settings', async (req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`
-    🚀 PACKIGO SERVER STARTED 🚀
-    ==================================================
-    Running on: http://localhost:${PORT}
-    Environment: ${process.env.FIREBASE_SERVICE_ACCOUNT ? 'Cloud/Production' : 'Local Development'}
-    
-      ____  _    ___ _  __  _____ _____ 
-     |  _ \\| |  | | | |/ / |_   _|_   _|
-     | |_) | |  | | | ' /    | |   | |  
-     |  __/| |__| | | . \\   _| |_  | |  
-     |_|   |____|_|_|_|\\_\\ |_____| |_|  
-     
-    (c) 2026 Sri Charan | Logic Loaded & Ready
-    ==================================================
-    `);
+    console.log(`Packigo Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.FIREBASE_SERVICE_ACCOUNT ? 'Production' : 'Development'}`);
 });
